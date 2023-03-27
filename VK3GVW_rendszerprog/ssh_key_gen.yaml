@@ -4,8 +4,6 @@
     - 10.0.2.11
     - 10.0.2.10
   become: yes
-  sshpass: a
-
   tasks:
     - name: Generate SSH key for root
       authorized_key:
