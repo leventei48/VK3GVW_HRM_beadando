@@ -1,0 +1,9 @@
+- name: Setup
+  hosts: hosts
+  become: yes
+  roles:
+    - add_to_fstab
+    - create_physical_vol
+    - dir_maker
+    - packages
+    - dssh
