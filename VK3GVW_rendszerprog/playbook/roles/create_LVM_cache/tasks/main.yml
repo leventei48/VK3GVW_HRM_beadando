@@ -1,0 +1,20 @@
+---
+# tasks file for create_LVM_cache
+- name: Check if /data/speci directory exists
+  ansible.builtin.stat:
+    path: /data/speci
+  register: speci_dir
+
+- name: Create /data/speci directory if it doesn't exist
+  ansible.builtin.file:
+    path: /data/speci
+    state: directory
+  when: not speci_dir.stat.exists
+
+- name: Check if /dev/sdb exists
+  ansible.builtin.stat:
+    path: /dev/sdb
+  register: sdb
+
+- name: Create physical volume
+  ansible.builtin.command: pvcreate /dev/sdb

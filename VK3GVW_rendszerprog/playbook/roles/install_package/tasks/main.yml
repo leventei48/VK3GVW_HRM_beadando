@@ -1,0 +1,11 @@
+---
+# tasks file for install_package
+- name: Install EPEL repository
+  ansible.builtin.yum:
+    name: epel-release
+    state: present
+
+- name: Install Midnight Commander
+  ansible.builtin.yum:
+    name: mc
+    state: present

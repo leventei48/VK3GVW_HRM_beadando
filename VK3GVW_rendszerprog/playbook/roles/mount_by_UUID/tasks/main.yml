@@ -1,0 +1,13 @@
+---
+# tasks file for mount_by_UUID
+- name: Get UUID of /dev/sdb
+  shell: lsblk -no UUID /dev/sdb
+  register: sdb_uuid
+
+- name: Add /dev/sdb to fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    line: "/dev/disk/by-uuid/{{ sdb_uuid.stdout }} /data/speci ext4 defaults 0 0"
+    insertafter: EOF
+    create: yes
+  when: sdb_uuid.stdout | length > 0
