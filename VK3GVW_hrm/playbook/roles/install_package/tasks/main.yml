@@ -9,3 +9,15 @@
   ansible.builtin.yum:
     name: mc
     state: present
+
+- name: Telepítse az LVM csomagokat
+  yum:
+    name:
+      - lvm2
+    state: present
+
+- name: Telepítse az ansible csomagokat
+  yum:
+    name:
+      - ansible
+    state: present

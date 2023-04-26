@@ -1,2 +1,4 @@
 ---
 # vars file for create_LVM_cache
+
+ ANSIBLE_LIBRARY: /usr/lib/python3.6/site-packages/ansible_collections/community/general/plugins/modules/

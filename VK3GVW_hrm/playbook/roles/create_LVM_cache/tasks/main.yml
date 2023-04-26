@@ -1,20 +1,78 @@
 ---
-# tasks file for create_LVM_cache
-- name: Check if /data/speci directory exists
-  ansible.builtin.stat:
-    path: /data/speci
-  register: speci_dir
+- name: delete cache volume group and logical volumes
+  lvol:
+    vg: cachevg
+    lv: "{{ item }}"
+    state: absent
+  loop:
+    - cachelv
+    - cachelv_thinpool
 
-- name: Create /data/speci directory if it doesn't exist
-  ansible.builtin.file:
-    path: /data/speci
-    state: directory
-  when: not speci_dir.stat.exists
+- name: create partition
+  parted:
+    device: /dev/sdb
+    number: 1
+    flags: [ lvm ]
+    state: present
+    part_end: 15GB
 
-- name: Check if /dev/sdb exists
-  ansible.builtin.stat:
-    path: /dev/sdb
-  register: sdb
+- name: Install lvm2 dependency
+  package:
+    name: lvm2
+    state: present
 
-- name: Create physical volume
-  ansible.builtin.command: pvcreate /dev/sdb
+- name: Create cache volume group
+  lvg:
+    vg: cachevg
+    state: present
+    pvs: /dev/sdb1
+  become: true
+
+- name: Create cache pool on cachevg
+  lvol:
+    vg: cachevg
+    lv: cachelv_data
+    size: 5g
+    state: present
+  become: true
+
+- name: Zero out the beginning of the cache device
+  command: "dd if=/dev/zero of=/dev/mapper/cachevg-cachelv_data bs=1M count=16"
+  become: true
+
+- name: Format cache pool
+  filesystem:
+    fstype: ext4
+    dev: /dev/mapper/cachevg-cachelv_data
+  become: true
+
+- name: Create cache thin pool on cachelv
+  lvol:
+    vg: cachevg
+    lv: cachelv_thinpool
+    thinpool: cachelv_thinpool
+    size: 8g
+    state: present
+  become: true
+
+- name: Create cache logical volume
+  lvol:
+    vg: cachevg
+    lv: cachelv
+    thinpool: cachelv_thinpool
+    size: 5g
+    state: present
+  become: true
+
+- name: Create cache pool on cachelv_thinpool
+  command: >
+    lvconvert --type cache-pool --poolmetadata cachevg/cachelv_data cachevg/cachelv_thinpool
+
+- name: Mount cache pool using UUID
+  mount:
+    path: /mnt/cache
+    src: "UUID={{ lookup('blkid', '/dev/mapper/cachevg-cachelv_data', 'UUID') }}"
+    fstype: ext4
+    opts: defaults
+    state: mounted
+  become: true

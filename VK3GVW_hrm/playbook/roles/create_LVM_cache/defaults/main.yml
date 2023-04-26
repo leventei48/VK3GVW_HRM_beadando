@@ -1,2 +1,7 @@
 ---
 # defaults file for create_LVM_cache
+vg_name: vg_data
+cache_lv: cache_lv
+data_lv: data_lv
+cache_size: 10g
+data_size: 20g
