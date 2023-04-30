@@ -1,2 +1,4 @@
 ---
 # vars file for mount_by_UUID
+mount_path: /data/speci/dir
+cache_uuid: "{{ ansible_mounts | selectattr('mount', 'equalto', mount_path) | map(attribute='uuid') | list | first }}"

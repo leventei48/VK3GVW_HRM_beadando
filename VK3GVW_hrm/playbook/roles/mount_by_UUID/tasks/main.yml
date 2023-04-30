@@ -1,13 +1,19 @@
 ---
 # tasks file for mount_by_UUID
-- name: Get UUID of /dev/sdb
-  shell: lsblk -no UUID /dev/sdb
-  register: sdb_uuid
+- name: Create mount directory if it doesn't exist
+  file:
+    path: "{{ mount_path }}"
+    state: directory
+  become: true
 
-- name: Add /dev/sdb to fstab
-  ansible.builtin.lineinfile:
-    path: /etc/fstab
-    line: "/dev/disk/by-uuid/{{ sdb_uuid.stdout }} /data/speci ext4 defaults 0 0"
-    insertafter: EOF
-    create: yes
-  when: sdb_uuid.stdout | length > 0
+- name: Get UUID of cache disk
+  command: blkid -s UUID -o value /dev/sdb1
+  register: cache_disk_uuid
+
+- name: Add cache disk to fstab
+  mount:
+    path: /data/speci/dir
+    src: UUID={{ cache_disk_uuid.stdout }}
+    fstype: ext4
+    opts: defaults
+    state: present
