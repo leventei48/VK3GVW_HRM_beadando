@@ -1,2 +1,5 @@
 ---
-# vars file for install_package
+epel_package: epel-release
+mc_package: mc
+lvm_package: lvm2
+ansible_package: ansible

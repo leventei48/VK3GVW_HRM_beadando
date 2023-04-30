@@ -1,23 +1,22 @@
 ---
-# tasks file for install_package
 - name: Install EPEL repository
   ansible.builtin.yum:
-    name: epel-release
+    name: "{{ epel_package }}"
     state: present
 
 - name: Install Midnight Commander
   ansible.builtin.yum:
-    name: mc
+    name: "{{ mc_package }}"
     state: present
 
-- name: Telepítse az LVM csomagokat
+- name: Install LVM packages
   yum:
     name:
-      - lvm2
+      - "{{ lvm_package }}"
     state: present
 
-- name: Telepítse az ansible csomagokat
+- name: Install Ansible Packages
   yum:
     name:
-      - ansible
+      - "{{ ansible_package }}"
     state: present

@@ -1,13 +1,3 @@
----
-- name: delete cache volume group and logical volumes
-  lvol:
-    vg: cachevg
-    lv: "{{ item }}"
-    state: absent
-  loop:
-    - cachelv
-    - cachelv_thinpool
-
 - name: create partition
   parted:
     device: /dev/sdb
@@ -21,7 +11,7 @@
     name: lvm2
     state: present
 
-- name: Create cache volume group
+- name: Extend cache volume group with /dev/sdb1
   lvg:
     vg: cachevg
     state: present
@@ -32,47 +22,37 @@
   lvol:
     vg: cachevg
     lv: cachelv_data
-    size: 5g
+    size: 10g
     state: present
   become: true
 
-- name: Zero out the beginning of the cache device
-  command: "dd if=/dev/zero of=/dev/mapper/cachevg-cachelv_data bs=1M count=16"
+- name: Convert cache pool to thin pool type
+  command: >
+    lvconvert --type thin-pool cachevg/cachelv_data -y
   become: true
 
-- name: Format cache pool
-  filesystem:
-    fstype: ext4
-    dev: /dev/mapper/cachevg-cachelv_data
-  become: true
-
-- name: Create cache thin pool on cachelv
+- name: Create cache thin pool on cachelv_data
   lvol:
     vg: cachevg
-    lv: cachelv_thinpool
-    thinpool: cachelv_thinpool
+    lv: cachelv_data_thinpool
+    thinpool: cachelv_data
     size: 8g
     state: present
   become: true
 
-- name: Create cache logical volume
+- name: Create main logical volume on cachevg
   lvol:
     vg: cachevg
-    lv: cachelv
-    thinpool: cachelv_thinpool
-    size: 5g
+    lv: slow
+    size: 3g
     state: present
   become: true
 
-- name: Create cache pool on cachelv_thinpool
-  command: >
-    lvconvert --type cache-pool --poolmetadata cachevg/cachelv_data cachevg/cachelv_thinpool
-
-- name: Mount cache pool using UUID
-  mount:
-    path: /mnt/cache
-    src: "UUID={{ lookup('blkid', '/dev/mapper/cachevg-cachelv_data', 'UUID') }}"
-    fstype: ext4
-    opts: defaults
-    state: mounted
+- name: Create cache logical volume on cachevg
+  lvol:
+    vg: cachevg
+    lv: cachelv
+    thinpool: cachelv_data
+    size: 2g
+    state: present
   become: true

@@ -3,7 +3,8 @@
   hosts: hosts
   become: yes
   roles:
-    #- ssh_key_gen
-    #- install_package
+    - ssh_key_gen
+    - install_package
     - create_LVM_cache
+    - mount_by_UUID
     
